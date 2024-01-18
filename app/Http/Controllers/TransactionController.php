@@ -17,8 +17,6 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
-		//echo '123'; exit;
-
         // Validate the incoming request data
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
@@ -44,8 +42,8 @@ class TransactionController extends Controller
 
 	public function show($id)
     {
-        // Get a specific transaction record
-        $transaction = Transaction::with('author')->findOrFail($id);
+		// Get a specific transaction record
+        $transaction = Transaction::findOrFail($id);
         return response()->json($transaction);
     }
 }
