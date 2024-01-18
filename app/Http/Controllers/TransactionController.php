@@ -19,6 +19,12 @@ class TransactionController extends Controller
     /**
      * Display a listing of transactions with optional filters.
      *
+	 * @LRDparam debit boolean
+     * @LRDparam credit boolean
+	 * @LRDparam min_amount integer
+     * @LRDparam max_amount integer
+	 * @LRDparam created_at string
+	 *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -63,6 +69,9 @@ class TransactionController extends Controller
     /**
      * Store a newly created transaction and send notifications.
      *
+	 * @LRDparam title string|max:255
+	 * @LRDparam amount integer
+	 *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -128,6 +137,8 @@ class TransactionController extends Controller
     /**
      * Remove the specified transaction from storage.
      *
+	 * @LRDparam id integer
+	 *
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -141,6 +152,8 @@ class TransactionController extends Controller
 
     /**
      * Display the specified transaction.
+	 *
+	 * @LRDparam id integer
      *
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
