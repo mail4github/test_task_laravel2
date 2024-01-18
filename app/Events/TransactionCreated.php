@@ -11,12 +11,27 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Transaction;
 
+/**
+ * Class TransactionCreated
+ *
+ * @package App\Events
+ */
 class TransactionCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * The transaction instance.
+     *
+     * @var \App\Models\Transaction
+     */
     public $transaction;
 
+    /**
+     * Create a new event instance.
+     *
+     * @param \App\Models\Transaction $transaction
+     */
     public function __construct(Transaction $transaction)
     {
         $this->transaction = $transaction;
@@ -34,4 +49,3 @@ class TransactionCreated
         ];
     }
 }
-
