@@ -8,10 +8,43 @@ use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
-    public function index()
+    // app/Http/Controllers/TransactionController.php
+
+    public function index(Request $request)
     {
-        // Get a list of transactions
-        $transactions = Transaction::with('author')->get();
+        // Set default values for filters
+        $isNegative = $request->input('debit', false);
+        $isPositive = $request->input('credit', false);
+        $minAmount = $request->input('min_amount', null);
+        $maxAmount = $request->input('max_amount', null);
+        $createdAt = $request->input('created_at', null);
+
+        // Build the query based on filters
+        $query = Transaction::query();
+
+        if ($isNegative) {
+            $query->where('amount', '<', 0);
+        }
+
+        if ($isPositive) {
+            $query->where('amount', '>', 0);
+        }
+
+        if ($minAmount !== null) {
+            $query->where('amount', '>=', $minAmount);
+        }
+
+        if ($maxAmount !== null) {
+            $query->where('amount', '<=', $maxAmount);
+        }
+
+        if ($createdAt !== null) {
+            $query->whereDate('created_at', $createdAt);
+        }
+
+        // Get the filtered list of transactions
+        $transactions = $query->get();
+
         return response()->json($transactions);
     }
 

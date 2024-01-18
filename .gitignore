@@ -17,3 +17,9 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+.editorconfig
+.env.example
+.gitattributes
+.gitignore
+/app/Http/Controllers/TransactionController.php
+test_task_laravel
