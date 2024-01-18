@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class TransactionController extends Controller
 {
@@ -61,8 +63,34 @@ class TransactionController extends Controller
 
         // Create a new transaction record
         $transaction = Transaction::create($validatedData);
+		
+		try {
+			// Send email
+			$this->sendTransactionEmail($transaction);
+		}
+		catch (Exception $e) {}
+
+        // Log the event
+        $this->logTransactionEvent($transaction);
 
         return response()->json($transaction, 201);
+    }
+
+	private function sendTransactionEmail(Transaction $transaction)
+    {
+        $recipientEmail = 'example@example.com';
+        $emailContent = "New transaction added:\nTitle: {$transaction->title}\nAmount: {$transaction->amount}";
+
+        Mail::raw($emailContent, function ($message) use ($recipientEmail) {
+            $message->to($recipientEmail)
+                    ->subject('New Transaction Added');
+        });
+    }
+
+    private function logTransactionEvent(Transaction $transaction)
+    {
+        // Log the event using the Laravel logger
+        Log::info("New transaction added - Title: {$transaction->title}, Amount: {$transaction->amount}");
     }
 
     public function destroy($id)
