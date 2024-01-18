@@ -137,9 +137,7 @@ class TransactionController extends Controller
     /**
      * Remove the specified transaction from storage.
      *
-	 * @LRDparam id integer
-	 *
-     * @param  int  $id
+	 * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
@@ -153,9 +151,7 @@ class TransactionController extends Controller
     /**
      * Display the specified transaction.
 	 *
-	 * @LRDparam id integer
-     *
-     * @param  int  $id
+	 * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
