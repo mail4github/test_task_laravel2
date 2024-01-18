@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Events\TransactionCreated;
 
 class TransactionController extends Controller
 {
@@ -72,6 +73,9 @@ class TransactionController extends Controller
 
         // Log the event
         $this->logTransactionEvent($transaction);
+
+		// Broadcast an event to the frontend
+        broadcast(new TransactionCreated($transaction))->toOthers();
 
         return response()->json($transaction, 201);
     }
