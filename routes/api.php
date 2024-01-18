@@ -18,12 +18,6 @@ use App\Http\Controllers\Auth\LoginController;
 |
 */
 
-//Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//    return $request->user();
-//});
-
-//var_dump($_POST); exit;
-
 // User register
 Route::post('/register', [RegisterController::class, 'register']);
 
@@ -35,7 +29,8 @@ Route::middleware('auth:api')->post('/logout', [LoginController::class, 'logout'
 
 // Protected routes
 Route::middleware('auth:api')->group(function () {
-    // Add a record
+
+	// Add a record
 	Route::post('/transactions', [TransactionController::class, 'store']);
 
 	// Get a list of records

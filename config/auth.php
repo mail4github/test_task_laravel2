@@ -43,9 +43,11 @@ return [
 		'api' => [
 			'driver' => 'passport',
 			'provider' => 'users',
+			'expire_in' => 86400, // Set the validity time in seconds
 		],
     ],
 
+	
     /*
     |--------------------------------------------------------------------------
     | User Providers

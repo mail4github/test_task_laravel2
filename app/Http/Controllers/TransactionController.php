@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
@@ -16,8 +17,20 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
-        // Add a new transaction record
-        $transaction = Transaction::create($request->all());
+		//echo '123'; exit;
+
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'amount' => 'required|integer',
+        ]);
+
+        // Add the authenticated user's ID to the transaction data
+        $validatedData['author_id'] = Auth::id();
+
+        // Create a new transaction record
+        $transaction = Transaction::create($validatedData);
+
         return response()->json($transaction, 201);
     }
 
