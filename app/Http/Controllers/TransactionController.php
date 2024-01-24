@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Events\TransactionCreated;
+use App\Services\TransactionService;
+use App\Http\Requests\TransactionRequest;
+use App\Services\TransactionCreateService;
+use App\Services\TransactionActionService;
+use App\Services\TransactionDestroyService;
+use App\Services\TransactionShowService;
 
 /**
  * Class TransactionController
@@ -28,6 +34,34 @@ class TransactionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
+
+	private $transactionService;
+	private $transactionCreateService;
+    private $transactionActionService;
+	private $transactionDestroyService;
+	private $transactionShowService;
+
+    public function __construct(
+		TransactionService $transactionService, 
+		TransactionCreateService $transactionCreateService, 
+		TransactionActionService $transactionActionService, 
+		TransactionDestroyService $transactionDestroyService,
+		TransactionShowService $transactionShowService)
+    {
+        $this->transactionService = $transactionService;
+		$this->transactionCreateService = $transactionCreateService;
+        $this->transactionActionService = $transactionActionService;
+		$this->transactionDestroyService = $transactionDestroyService;
+		$this->transactionShowService = $transactionShowService;
+    }
+	
+	/**
+     * Get a list of transactions with optional filters.
+     *
+     * @param Request $request The HTTP request instance.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         // Set default values for filters
@@ -37,103 +71,32 @@ class TransactionController extends Controller
         $maxAmount = $request->input('max_amount', null);
         $createdAt = $request->input('created_at', null);
 
-        // Build the query based on filters
-        $query = Transaction::query();
-
-        if ($isNegative) {
-            $query->where('amount', '<', 0);
-        }
-
-        if ($isPositive) {
-            $query->where('amount', '>', 0);
-        }
-
-        if ($minAmount !== null) {
-            $query->where('amount', '>=', $minAmount);
-        }
-
-        if ($maxAmount !== null) {
-            $query->where('amount', '<=', $maxAmount);
-        }
-
-        if ($createdAt !== null) {
-            $query->whereDate('created_at', $createdAt);
-        }
-
-        // Get the filtered list of transactions
-        $transactions = $query->get();
+		// Get the filtered list of transactions using the TransactionService
+        $transactions = $this->transactionService->getFilteredTransactions($isNegative, $isPositive, $minAmount, $maxAmount, $createdAt);
 
         return response()->json($transactions);
     }
-
-    /**
-     * Store a newly created transaction and send notifications.
+	
+	/**
+     * Store a newly created transaction in the database.
      *
-	 * @LRDparam title string|max:255
-	 * @LRDparam amount integer
-	 *
-     * @param  \Illuminate\Http\Request  $request
+     * @param TransactionRequest $request The validated transaction request instance.
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function store(TransactionRequest $request)
     {
-        // Validate the incoming request data
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'amount' => 'required|integer',
-        ]);
+        // Create the transaction
+        $transaction = $this->transactionCreateService->createTransaction($request->validated(), Auth::id());
 
-        // Add the authenticated user's ID to the transaction data
-        $validatedData['author_id'] = Auth::id();
-
-        // Create a new transaction record
-        $transaction = Transaction::create($validatedData);
-
-        try {
-            // Send email
-            $this->sendTransactionEmail($transaction);
-        } catch (\Exception $e) {
-            // Handle email sending exception (if needed)
-        }
-
-        // Log the event
-        $this->logTransactionEvent($transaction);
-
-        // Broadcast an event to the frontend
-        broadcast(new TransactionCreated($transaction))->toOthers();
+        // Perform additional actions
+        $this->transactionActionService->sendTransactionEmail($transaction);
+        $this->transactionActionService->logTransactionEvent($transaction);
+        $this->transactionActionService->broadcastTransactionEvent($transaction);
 
         return response()->json($transaction, 201);
     }
-
-    /**
-     * Send an email notification for the given transaction.
-     *
-     * @param  \App\Models\Transaction  $transaction
-     * @return void
-     */
-    private function sendTransactionEmail(Transaction $transaction)
-    {
-        $recipientEmail = 'example@example.com';
-        $emailContent = "New transaction added:\nTitle: {$transaction->title}\nAmount: {$transaction->amount}";
-
-        Mail::raw($emailContent, function ($message) use ($recipientEmail) {
-            $message->to($recipientEmail)
-                    ->subject('New Transaction Added');
-        });
-    }
-
-    /**
-     * Log the event of a new transaction.
-     *
-     * @param  \App\Models\Transaction  $transaction
-     * @return void
-     */
-    private function logTransactionEvent(Transaction $transaction)
-    {
-        // Log the event using the Laravel logger
-        Log::info("New transaction added - Title: {$transaction->title}, Amount: {$transaction->amount}");
-    }
-
+    
     /**
      * Remove the specified transaction from storage.
      *
@@ -142,9 +105,9 @@ class TransactionController extends Controller
      */
     public function destroy($id)
     {
-        // Delete a transaction record
-        $transaction = Transaction::findOrFail($id);
-        $transaction->delete();
+        // Delete the transaction using the TransactionDestroyService class
+        $this->transactionDestroyService->deleteTransaction($id);
+
         return response()->json(null, 204);
     }
 
@@ -156,8 +119,9 @@ class TransactionController extends Controller
      */
     public function show($id)
     {
-        // Get a specific transaction record
-        $transaction = Transaction::findOrFail($id);
+        // Get a specific transaction record using the transactionShowService class
+        $transaction = $this->transactionShowService->showTransaction($id);
+
         return response()->json($transaction);
     }
 }
